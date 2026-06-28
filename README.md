@@ -17,17 +17,29 @@ This repository contains scripts for:
 ## Repository structure
 
 ```
+data/                         # bundled reference and metadata files
+  reference/
+    Q_P_deseq2_CI_SS_common_122320.csv   consensus DEG list
+    chromatin_remodelers.tsv             chromatin remodeling gene list
+    GRCh38_unified_blacklist.bed         ENCODE GRCh38 unified blacklist
+  rnaseq/
+    samples.csv                          RNA-seq sample metadata
+    sample_col.csv                       column annotation for pheatmap
+    norm_log2_counts_final_noquant.csv   normalized log2 counts
+    P.CI.SS.CIR.SSR.norm_counts.csv     triplicate normalized counts
+    deseq2_results/                      pre-computed DESeq2 result CSVs
+  cut_and_tag/
+    samplesheet.q_vs_p.csv              DiffBind samplesheet (P vs Q)
+
 rnaseq/
-  config.R                  # set all data paths here
-  run_deseq2.R              # Runs DESeq2 analysis. Sources config.R + a design file describing the differential gene expression analysis. Runs deseq2_workflow.R
-  deseq2_workflow.R         # tximport → DESeq2 → PCA → heatmap → GO enrichment analysis
-  heatmaps.R                # Heatmaps visualizing differentially expressed genes across replicates and conditions; run in same workspace after run_deseq2.R
-  chromatin_pheatmap.R      # Heatmap of differential gene expression in chromatin remodeling genes. 
-  deg_designs/              # Experimental design configs (one per comparison)
+  config.R                  # set PROJECT_DIR here (genome + Salmon paths)
+  run_deseq2.R              # entry point: sources config.R + a design file, runs deseq2_workflow.R
+  deseq2_workflow.R         # tximport → DESeq2 → PCA → heatmap → GO enrichment
+  heatmaps.R                # comparison heatmaps (Figs 1A, 3E); run in same session as run_deseq2.R
+  chromatin_pheatmap.R      # chromatin remodeling gene heatmap (Fig 1B); largely standalone
+  deg_designs/              # experimental design configs (one per comparison)
     design.between_perturbations.R
     design.within_perturbation.R
-    design.p_vs_q.R
-    design.all_experiments.R
 
 cut_and_tag/
   peak_calling/             # SEACR CUT&Tag peak-calling pipeline (steps 1–4, SGE cluster)
@@ -38,7 +50,7 @@ cut_and_tag/
     step4_peak_call.sh      # Bedgraph generation + SEACR peak calling
     SEACR_1.3.sh            # SEACR tool (Meers et al. 2019)
   diffbind/                 # Differential binding analysis (Figs 2C, 2D)
-    config.R                # set PROJECT_DIR here
+    config.R                # set PROJECT_DIR here (BAM + peak file paths)
     diffbind_workflow.R     # DiffBind + DESeq2 differential peak analysis
 ```
 
@@ -84,24 +96,36 @@ Genome: **hg38 / GRCh38**, annotation **Gencode v29**.
 
 Raw sequencing data are deposited at GEO: **[accession number]**.
 
-Expected input files (set paths in the relevant `config.R` / `config.sh`):
+### Bundled in this repository (`data/`)
+
+These files are included and require no additional setup:
 
 | File | Used by |
 |------|---------|
-| Salmon `quant.sf` files (one per sample) | `run_deseq2.R` |
-| `samples.csv` (sample metadata) | `run_deseq2.R` |
-| `gencode.v29.annotation.gff3` | `run_deseq2.R` |
-| `gencode.v29.annotation.csv` | `run_deseq2.R`, `chromatin_pheatmap.R` |
-| `Q_P_deseq2_CI_SS_common_122320.csv` (consensus DEG list) | `deseq2_workflow.R`, `heatmaps.R`, `chromatin_pheatmap.R` |
-| `norm_log2_counts_final_noquant.csv` (normalized counts) | `chromatin_pheatmap.R` |
-| `P.CI.SS.CIR.SSR.norm_counts.csv` (triplicate norm counts) | `heatmaps.R` |
-| `chromatin_remodelers.tsv` | `chromatin_pheatmap.R`, `deseq2_workflow.R` |
-| SEACR peak BED files | `diffbind_workflow.R` |
-| BAM files (CTCF, H4K20me3) | `diffbind_workflow.R` |
-| DiffBind samplesheet CSV | `diffbind_workflow.R` |
-| Raw FASTQ files | CUT&Tag pipeline steps 1–4 |
-| hg38 Bowtie2 index | step 1 |
-| `GRCh38_unified_blacklist.bed` | steps 3–4, `diffbind_workflow.R` |
+| `data/reference/Q_P_deseq2_CI_SS_common_122320.csv` | `deseq2_workflow.R`, `heatmaps.R`, `chromatin_pheatmap.R` |
+| `data/reference/chromatin_remodelers.tsv` | `chromatin_pheatmap.R`, `deseq2_workflow.R` |
+| `data/reference/GRCh38_unified_blacklist.bed` | `step3_filter.sh`, `step4_peak_call.sh`, `diffbind_workflow.R` |
+| `data/rnaseq/samples.csv` | `run_deseq2.R` |
+| `data/rnaseq/sample_col.csv` | `chromatin_pheatmap.R` |
+| `data/rnaseq/norm_log2_counts_final_noquant.csv` | `chromatin_pheatmap.R` |
+| `data/rnaseq/P.CI.SS.CIR.SSR.norm_counts.csv` | `heatmaps.R` |
+| `data/rnaseq/deseq2_results/` (3 CSV files) | `heatmaps.R` |
+| `data/cut_and_tag/samplesheet.q_vs_p.csv` | `diffbind_workflow.R` |
+
+### Large files — set paths in config
+
+These must be obtained externally and configured via `PROJECT_DIR` in `config.R` / `PROJ_PATH` in `config.sh`:
+
+| File | Source | Used by |
+|------|--------|---------|
+| Salmon `quant.sf` files (one per sample) | GEO (this study) | `run_deseq2.R` |
+| `gencode.v29.annotation.gff3` | [Gencode release 29](https://www.gencodegenes.org/human/release_29.html) | `run_deseq2.R` |
+| `gencode.v29.annotation.csv` (derived) | Generated from GFF3 by workflow | `chromatin_pheatmap.R` |
+| `GRCh38.primary_assembly.genome.fa` | [Gencode release 29](https://www.gencodegenes.org/human/release_29.html) | CUT&Tag pipeline |
+| hg38 Bowtie2 index | Built from genome FASTA | `step1_align.sh` |
+| SEACR peak BED files | Produced by `step4_peak_call.sh` | `diffbind_workflow.R` |
+| BAM files (CTCF, H4K20me3) | Produced by `step2_dedup.sh` | `diffbind_workflow.R` |
+| Raw FASTQ files | GEO (this study) | `step1_align.sh` |
 
 ---
 
@@ -109,7 +133,7 @@ Expected input files (set paths in the relevant `config.R` / `config.sh`):
 
 ### RNA-seq (DESeq2)
 
-1. Edit `rnaseq/config.R` — set `PROJECT_DIR` and `SCRIPTS_DIR`.
+1. Edit `rnaseq/config.R` — set `PROJECT_DIR` (genome + Salmon quant paths). `SCRIPTS_DIR` and reference data paths are auto-detected.
 2. Choose a design in `rnaseq/deg_designs/` and set `DESIGN_R` in `run_deseq2.R`.
 3. Source `run_deseq2.R` in an R session.
 4. Optionally, in the **same R session** (objects still loaded), source `heatmaps.R` (Figs 1A, 3E).

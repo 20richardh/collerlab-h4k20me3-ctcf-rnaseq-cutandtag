@@ -5,14 +5,14 @@ source(file.path(dirname(sys.frame(1)$ofile), "config.R"))
 library(GenomicRanges)
 
 setup <- function() {
-  setwd(projPath)
+  setwd(PROJECT_DIR)
   setwd("diffbind")
   setwd("final")
 }
 
 
 # P,Q CTCF----------------------------------------------------------------------
-SAMPLESHEET <- "diffbind/metadata/samplesheet.q_vs_p.csv"
+SAMPLESHEET <- SAMPLESHEET_QP
 setup()
 COMPARISON_NAME <- "P.Q"
 FACTORS <- c("CTCF")
@@ -43,7 +43,7 @@ library(DiffBind)
 
 
 # READ SAMPLE DESIGN
-samples <- read.csv(file.path(projPath, SAMPLESHEET))
+samples <- read.csv(SAMPLESHEET)
 samples <- samples[samples$Factor %in% FACTORS, ]
 if (!is.null(SELECT_BY)) {
   samples <- samples[samples[[SELECT_BY]] %in% SELECT_VALS,]
