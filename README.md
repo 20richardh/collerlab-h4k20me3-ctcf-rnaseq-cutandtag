@@ -114,7 +114,7 @@ These files are included and require no additional setup:
 
 ### Large files — set paths in config
 
-These must be obtained externally and configured via `PROJECT_DIR` in `config.R` / `PROJ_PATH` in `config.sh`:
+Reference genome files and RNA-seq/CUT&Tag inputs and outputs. Set paths in config, including `PROJECT_DIR` in `config.R` / `PROJ_PATH` in `config.sh`:
 
 | File | Source | Used by |
 |------|--------|---------|
