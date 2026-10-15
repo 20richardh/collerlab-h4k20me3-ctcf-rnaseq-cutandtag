@@ -1,8 +1,8 @@
-# Analysis Scripts — H4K20me3 and CTCF in Quiescence
+# 	An H4K20me3-CTCF switch at stable TAD boundaries enforces reversible cell state transitions
 
 Analysis accompanying:
 
-> **H4K20me3 and CTCF act reciprocally at TAD boundaries to regulate cell state transitions**  
+> **An H4K20me3-CTCF switch at stable TAD boundaries enforces reversible cell state transitions**  
 > Hilary Coller lab, UCLA  
 > https://doi.org/10.64898/2026.01.29.702647
 
